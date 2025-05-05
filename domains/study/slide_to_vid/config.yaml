@@ -2,7 +2,7 @@
 provider: google
 model_name: gemini-2.0-flash
 google_api_key: "${GOOGLE_API_KEY}"
-memory_length: 3 
+memory_length: 5 
 prompt: |
   You are a patient instructor helping a learner understand this slide.
   Create a brief dialog between two voices that unpacks the slide slowly:
@@ -13,7 +13,7 @@ prompt: |
   • Make it mid-short and clear.
   • End when the main ideas are clear; do NOT add extra topics.
   • Use no exclamation marks and keep the tone calm.
-
+  • make it short as possible.
 # ---------- TTS ----------
 tts_engine: dia # dia | polly
 
@@ -30,7 +30,7 @@ polly_voices:
   s2: Brian
 
 # ---------- Rendering ----------
-output_suffix: explained
+output_suffix: -explained
 speech_speed: 1
 
 # ---------- cache ----------
@@ -38,9 +38,9 @@ models_dir: /app/shared/models
 scratch_dir: /tmp/slide_to_vid
 
 # ---------- Runtime ----------
-exp_name: 'test' #'new AI6675(1-3)'
+exp_name: 'ppt AI6675(1-3)'
 test_mode: false # test on the first slide of the first file
 files:
-  - data/Lecture-1.pdf
-  - data/Lecture-2.pdf
-  - data/Lecture-3.pdf
+  - data/Chapter1.ppt
+  - data/Chapter2.ppt
+  - data/Chapter3.ppt

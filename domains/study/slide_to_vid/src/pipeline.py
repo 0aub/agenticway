@@ -25,6 +25,8 @@ def _process_slide(
     memory: List[str]
 ) -> tts.AudioSegment:
     """OCR → dialog → TTS for one slide, then save .txt and .wav."""
+    start_time = time.time()  # Start timing
+
     # ----- generate dialog --------------------------------------------
     slide_text = ocr.ocr_image(img_path)
     prompt = llm.build_prompt(slide_text, cfg.prompt, memory, idx)
@@ -56,23 +58,32 @@ def _process_slide(
 
     # ── persist artifacts ───────────────────────────────────────────────
     (txt_dir / f"slide_{idx:02}.txt").write_text(dialog)
-    audio_seg.export(wav_dir / f"slide_{idx:02}.wav", format="wav")
+    audio_file_path = wav_dir / f"slide_{idx:02}.wav"
+    audio_seg.export(audio_file_path, format="wav")
 
     # Store the generated dialog in memory
     memory.append(dialog)
     if len(memory) > cfg.memory_length:
         memory.pop(0)  # Remove the oldest entry if memory exceeds the length
 
+    # ----- Log processing time and audio length -----------------------
+    processing_time = time.time() - start_time
+    audio_length = audio_seg.duration_seconds  # Get audio length in seconds
+    audio_length_hh_mm_ss = str(datetime.timedelta(seconds=int(audio_length)))
+    processing_time_hh_mm_ss = str(datetime.timedelta(seconds=int(processing_time)))
+
+    log.info(f"[{idx}/{total}] Processing time: {processing_time_hh_mm_ss}, Audio length: {audio_length_hh_mm_ss}")
+
     return audio_seg
 
 
-def process_pdf(pdf_path: Path, cfg: AppConfig) -> Path:
-    """Full pipeline for one PDF ➜ narrated MP4 (sequential, low‑RAM)."""
+def process_pdf(file_path: Path, cfg: AppConfig) -> Path:
+    """Full pipeline for one PDF or PPT ➜ narrated MP4 (sequential, low‑RAM)."""
     start = time.time()
 
     # ── run‑specific directories ───────────────────────────────────────
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    run_dir = Path("logs") / f"{cfg.exp_name}_{timestamp}" / pdf_path.stem  # Add timestamp to exp name
+    run_dir = Path("logs") / f"{cfg.exp_name}_{timestamp}" / file_path.stem
     run_dir.mkdir(parents=True, exist_ok=True)
 
     # Create subdirectories for txt and wav
@@ -83,12 +94,15 @@ def process_pdf(pdf_path: Path, cfg: AppConfig) -> Path:
 
     cfg.save_snapshot(run_dir / "config.yaml")
     init_logger(run_dir)
-    log.info(f"📄  Processing {pdf_path.name}")
+    log.info(f"📄  Processing {file_path.name}")
+
+    # ── Prepare file for processing ───────────────────────────────────
+    file_path = ocr.prepare_file_for_processing(file_path, cfg.scratch_dir)
 
     # ── slide rasterisation ────────────────────────────────────────────
-    slides = ocr.pdf_to_images(pdf_path, cfg.scratch_dir)
+    slides = ocr.pdf_to_images(file_path, cfg.scratch_dir)
     if cfg.test_mode:
-        slides = slides[:1]                # only first slide when testing
+        slides = slides[:1]  # only first slide when testing
     total = len(slides)
 
     # ── LLM loader (lazy singleton) ────────────────────────────────────
@@ -106,7 +120,7 @@ def process_pdf(pdf_path: Path, cfg: AppConfig) -> Path:
         segments.append(seg)
 
     # ── Assemble video ────────────────────────────────────────────────
-    out_video  = run_dir / f"{pdf_path.stem}{cfg.output_suffix}.mp4"
+    out_video  = run_dir / f"{file_path.stem}{cfg.output_suffix}.mp4"
     video_path = video.assemble_video(slides, segments, out_video)
 
     # ── Extra info: length & size ─────────────────────────────────────

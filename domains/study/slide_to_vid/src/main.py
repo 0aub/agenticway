@@ -24,8 +24,8 @@ def _cli() -> None:
 
     start_time = time.time()
 
-    for pdf_path in cfg.files:S
-        process_pdf(Path(pdf_path).expanduser(), cfg)
+    for file_path in cfg.files:
+        process_pdf(Path(file_path).expanduser(), cfg)
 
     total_time = time.time() - start_time  
     elapsed_time = datetime.timedelta(seconds=int(total_time))  
