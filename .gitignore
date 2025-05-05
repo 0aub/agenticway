@@ -1,0 +1,20 @@
+# Logs
+logs/
+*.log
+
+# IDEs and editors
+.vscode/
+
+# Environment files
+.env
+
+# Python (if any Python is involved)
+__pycache__/
+*.py[cod]
+*.pyo
+
+# other
+data/
+hub/
+scripts/
+

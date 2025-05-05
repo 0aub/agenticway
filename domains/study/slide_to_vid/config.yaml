@@ -1,0 +1,38 @@
+# ---------- LLM ----------
+provider: google
+model_name: gemini-2.0-flash
+google_api_key: "${GOOGLE_API_KEY}"
+
+# ---------- TTS ----------
+tts_engine: dia # dia | polly
+
+tts_model: nari-labs/Dia-1.6B
+dia_voices:
+  s1: 
+  s2: 
+
+aws_region: "${AWS_REGION}"
+aws_access_key: "${AWS_ACCESS_KEY}"
+aws_secret_key: "${AWS_SECRET_KEY}"
+polly_voices:
+  s1: Ivy
+  s2: Brian
+
+# ---------- Rendering ----------
+output_suffix: explained
+speech_speed: 1
+
+# ---------- Runtime ----------
+models_dir: /app/shared/models
+scratch_dir: /tmp/slide_to_vid
+
+# ---------- Runtime ----------
+exp_name: 'AI6675(1-6)'
+test_mode: false # test on the first slide of the first file
+files:
+  - data/Chapter-1 (Knowledge Representation).pdf
+  - data/Chapter-2 (Propositional Logic).pdf
+  - data/Chapter-3 (First Order Logic).pdf
+  - data/Chapter-4 (Inference).pdf
+  - data/Chapter-5 (reasoning).pdf
+  - data/Chapter-6 (Resolution).pdf

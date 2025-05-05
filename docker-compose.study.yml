@@ -1,0 +1,19 @@
+services:
+  slide_to_vid:
+    build: ./domains/study/slide_to_vid
+    volumes:
+      - ./domains/study/slide_to_vid:/app
+      - ./shared:/app/shared
+    env_file:
+      - .env
+    working_dir: /app
+    environment:
+      - HF_HOME=/app/shared/models
+    tty: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
