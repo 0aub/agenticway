@@ -1,7 +1,9 @@
 from __future__ import annotations
 import argparse
 import sys
+import time
 from pathlib import Path
+from datetime import datetime
 
 from config import AppConfig, ConfigError
 from pipeline import process_pdf
@@ -20,8 +22,14 @@ def _cli() -> None:
     if cfg.test_mode and cfg.files:
         cfg.files = cfg.files[:1]
 
-    for pdf_path in cfg.files:
+    start_time = time.time()
+
+    for pdf_path in cfg.files:S
         process_pdf(Path(pdf_path).expanduser(), cfg)
+
+    total_time = time.time() - start_time  
+    elapsed_time = datetime.timedelta(seconds=int(total_time))  
+    print(f"\n\n✅  Total experiment time: {elapsed_time}") 
 
 
 if __name__ == "__main__":

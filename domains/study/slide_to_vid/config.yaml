@@ -2,6 +2,17 @@
 provider: google
 model_name: gemini-2.0-flash
 google_api_key: "${GOOGLE_API_KEY}"
+memory_length: 3 
+prompt: |
+  You are a patient instructor helping a learner understand this slide.
+  Create a brief dialog between two voices that unpacks the slide slowly:
+  • First line begins with [S1] and gives a plain-language overview.
+  • Second line begins with [S2] and echoes or asks a clarifying question.
+  • Continue alternating [S1] / [S2] for 2-6 total lines.
+  • Break down key points one at a time, using everyday examples.
+  • Make it mid-short and clear.
+  • End when the main ideas are clear; do NOT add extra topics.
+  • Use no exclamation marks and keep the tone calm.
 
 # ---------- TTS ----------
 tts_engine: dia # dia | polly
@@ -22,17 +33,14 @@ polly_voices:
 output_suffix: explained
 speech_speed: 1
 
-# ---------- Runtime ----------
+# ---------- cache ----------
 models_dir: /app/shared/models
 scratch_dir: /tmp/slide_to_vid
 
 # ---------- Runtime ----------
-exp_name: 'AI6675(1-6)'
+exp_name: 'test' #'new AI6675(1-3)'
 test_mode: false # test on the first slide of the first file
 files:
-  - data/Chapter-1 (Knowledge Representation).pdf
-  - data/Chapter-2 (Propositional Logic).pdf
-  - data/Chapter-3 (First Order Logic).pdf
-  - data/Chapter-4 (Inference).pdf
-  - data/Chapter-5 (reasoning).pdf
-  - data/Chapter-6 (Resolution).pdf
+  - data/Lecture-1.pdf
+  - data/Lecture-2.pdf
+  - data/Lecture-3.pdf

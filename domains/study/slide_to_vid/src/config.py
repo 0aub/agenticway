@@ -21,6 +21,18 @@ class AppConfig:
     provider: str = "google"
     model_name: str = "gemini-2.0-flash"
     google_api_key: str = ""
+    memory_length: int = 1
+    prompt: str = (
+        "You are a patient instructor helping a learner understand this slide.\n"
+        "Create a brief dialog between two voices that unpacks the slide slowly:\n"
+        "• First line begins with [S1] and gives a plain-language overview.\n"
+        "• Second line begins with [S2] and echoes or asks a clarifying question.\n"
+        "• Continue alternating [S1] / [S2] for 2-6 total lines.\n"
+        "• Break down key points one at a time, using everyday examples.\n"
+        "• Make it mid-short and clear.\n"
+        "• End when the main ideas are clear; do NOT add extra topics.\n"
+        "• Use no exclamation marks and keep the tone calm."
+    )
 
     # ─── TTS ────────────────────────────────────────────
     tts_engine: str = "dia"           # "dia" | "polly"

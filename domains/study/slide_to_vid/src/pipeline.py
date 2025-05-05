@@ -1,5 +1,5 @@
 from __future__ import annotations
-import datetime as _dt
+import datetime
 import logging
 import textwrap
 import time
@@ -22,17 +22,18 @@ def _process_slide(
     txt_dir: Path,
     wav_dir: Path,
     llm_fn: Callable[[str], str],
+    memory: List[str]
 ) -> tts.AudioSegment:
     """OCR → dialog → TTS for one slide, then save .txt and .wav."""
     # ----- generate dialog --------------------------------------------
     slide_text = ocr.ocr_image(img_path)
-    prompt      = llm.build_prompt(slide_text)
-    dialog      = llm_fn(prompt)
+    prompt = llm.build_prompt(slide_text, cfg.prompt, memory, idx)
+    dialog = llm_fn(prompt)
 
     # ----- prettier logging -------------------------------------------
     preview = " ".join(dialog.split()) # collapse whitespace
     wrapped = textwrap.wrap(preview, width=60) # 60‑char columns
-    sample  = "\n".join(wrapped[:2]) # first two lines
+    sample = "\n".join(wrapped[:2]) # first two lines
 
     log.info(f"[{idx}/{total}] {sample}")
 
@@ -57,19 +58,28 @@ def _process_slide(
     (txt_dir / f"slide_{idx:02}.txt").write_text(dialog)
     audio_seg.export(wav_dir / f"slide_{idx:02}.wav", format="wav")
 
+    # Store the generated dialog in memory
+    memory.append(dialog)
+    if len(memory) > cfg.memory_length:
+        memory.pop(0)  # Remove the oldest entry if memory exceeds the length
+
     return audio_seg
 
 
 def process_pdf(pdf_path: Path, cfg: AppConfig) -> Path:
     """Full pipeline for one PDF ➜ narrated MP4 (sequential, low‑RAM)."""
-    t0 = time.perf_counter()
+    start = time.time()
 
     # ── run‑specific directories ───────────────────────────────────────
-    timestamp = _dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    run_dir   = Path("logs") / f"{cfg.exp_name}_{timestamp}" / pdf_path.stem
-    txt_dir, wav_dir = run_dir / "txt", run_dir / "wav"
-    for d in (run_dir, txt_dir, wav_dir):
-        d.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    run_dir = Path("logs") / f"{cfg.exp_name}_{timestamp}" / pdf_path.stem  # Add timestamp to exp name
+    run_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create subdirectories for txt and wav
+    txt_dir = run_dir / "txt"
+    wav_dir = run_dir / "wav"
+    txt_dir.mkdir(parents=True, exist_ok=True)
+    wav_dir.mkdir(parents=True, exist_ok=True)
 
     cfg.save_snapshot(run_dir / "config.yaml")
     init_logger(run_dir)
@@ -88,9 +98,10 @@ def process_pdf(pdf_path: Path, cfg: AppConfig) -> Path:
 
     # ── OCR → dialog → TTS for each slide (sequential) ─────────────────
     segments: List[tts.AudioSegment] = []
+    memory = []
     for idx, img_path in enumerate(slides, 1):
         seg = _process_slide(
-            idx, total, img_path, cfg, txt_dir, wav_dir, llm_fn
+            idx, total, img_path, cfg, txt_dir, wav_dir, llm_fn, memory
         )
         segments.append(seg)
 
@@ -102,9 +113,11 @@ def process_pdf(pdf_path: Path, cfg: AppConfig) -> Path:
     dur_sec = VideoFileClip(str(video_path)).duration
     size_mb = video_path.stat().st_size / (1024 * 1024)
 
-    dt = _dt.timedelta(seconds=int(time.perf_counter() - t0))
+    # Format duration as hh:mm:ss
+    elapsed_time = datetime.timedelta(seconds=int(time.time() - start)) 
+    dur_hh_mm_ss = datetime.timedelta(seconds=int(dur_sec))
     log.info(
-        f"✅  Finished in {dt}. "
-        f"Video ➜ {video_path}  |  length {dur_sec:.1f}s  |  {size_mb:.2f} MB"
+        f"✅  Finished in {elapsed_time}. "
+        f"Video ➜ {video_path}  |  length {dur_hh_mm_ss}  |  {size_mb:.2f} MB"
     )
     return video_path

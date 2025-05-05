@@ -1,6 +1,6 @@
 from __future__ import annotations
 from functools import lru_cache
-from typing import Callable
+from typing import Callable, List
 
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
@@ -10,24 +10,20 @@ _loaded_gemini = {}
 _loaded_local_llm = {}
 
 
-def build_prompt(slide_text: str) -> str:
+def build_prompt(slide_text: str, prompt: str, memory: List[str], current_slide_index: int) -> str:
     """
     Generate a calm, teaching-style dialog prompt using [S1] / [S2] tags.
     """
-    return (
-        "You are a patient instructor helping a learner understand this slide.\n"
-        "Create a brief dialog between two voices that unpacks the slide slowly:\n"
-        "• First line begins with [S1] and gives a plain-language overview.\n"
-        "• Second line begins with [S2] and echoes or asks a clarifying question.\n"
-        "• Continue alternating [S1] / [S2] for 2-6 total lines.\n"
-        "• Break down key points one at a time, using everyday examples.\n"
-        "• Make it mid-short and clear.\n"
-        "• End when the main ideas are clear; do NOT add extra topics.\n"
-        "• Use no exclamation marks and keep the tone calm.\n\n"
-        "Slide content:\n"
-        f"{slide_text}\n\n"
-        "Dialog:"
+    # Format memory content to indicate previous slides with numbers
+    memory_length = len(memory)  # Get the current length of the memory
+    memory_content = "\n".join(
+        [f"Slide {i + 1}: {mem}" for i, mem in enumerate(memory[-memory_length:])]
     )
+    
+    # Indicate the current slide
+    current_slide_info = f"Current Slide {current_slide_index}: {slide_text}"
+
+    return f"{memory_content}\n\n{current_slide_info}\n\n{prompt}\n\nDialog:"
 
 
 def _load_local_llm(model_name: str, cache_dir: str) -> Callable[[str], str]:
