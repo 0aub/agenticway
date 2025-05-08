@@ -72,18 +72,17 @@ def _process_slide(
     audio_length_hh_mm_ss = str(datetime.timedelta(seconds=int(audio_length)))
     processing_time_hh_mm_ss = str(datetime.timedelta(seconds=int(processing_time)))
 
-    log.info(f"[{idx}/{total}] Processing time: {processing_time_hh_mm_ss}, Audio length: {audio_length_hh_mm_ss}")
+    log.info(f" -->  Processing time: {processing_time_hh_mm_ss}\n -->  Audio length: {audio_length_hh_mm_ss}")
 
     return audio_seg
 
 
-def process_pdf(file_path: Path, cfg: AppConfig) -> Path:
+def process_pdf(file_path: Path, cfg: AppConfig, exp_dir: Path) -> Path:
     """Full pipeline for one PDF or PPT ➜ narrated MP4 (sequential, low‑RAM)."""
     start = time.time()
 
     # ── run‑specific directories ───────────────────────────────────────
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    run_dir = Path("logs") / f"{cfg.exp_name}_{timestamp}" / file_path.stem
+    run_dir = exp_dir / file_path.stem
     run_dir.mkdir(parents=True, exist_ok=True)
 
     # Create subdirectories for txt and wav
@@ -92,7 +91,6 @@ def process_pdf(file_path: Path, cfg: AppConfig) -> Path:
     txt_dir.mkdir(parents=True, exist_ok=True)
     wav_dir.mkdir(parents=True, exist_ok=True)
 
-    cfg.save_snapshot(run_dir / "config.yaml")
     init_logger(run_dir)
     log.info(f"📄  Processing {file_path.name}")
 

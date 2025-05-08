@@ -38,9 +38,10 @@ models_dir: /app/shared/models
 scratch_dir: /tmp/slide_to_vid
 
 # ---------- Runtime ----------
-exp_name: 'ppt AI6675(1-3)'
+exp_name: 'AI6670(1-3)'
 test_mode: false # test on the first slide of the first file
 files:
-  - data/Chapter1.ppt
-  - data/Chapter2.ppt
-  - data/Chapter3.ppt
+  - data/Chapter1.pptx
+  - data/Chapter2-1.pptx
+  - data/Chapter2-2.pptx
+  - data/Chapter3.pptx

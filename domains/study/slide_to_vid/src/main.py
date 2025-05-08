@@ -3,7 +3,7 @@ import argparse
 import sys
 import time
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from config import AppConfig, ConfigError
 from pipeline import process_pdf
@@ -23,12 +23,20 @@ def _cli() -> None:
         cfg.files = cfg.files[:1]
 
     start_time = time.time()
+    
+    # Create experiment directory with timestamp
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    exp_dir = Path("logs") / f"{cfg.exp_name}_{timestamp}"
+    exp_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Save config in experiment directory
+    cfg.save_snapshot(exp_dir / "config.yaml")
 
     for file_path in cfg.files:
-        process_pdf(Path(file_path).expanduser(), cfg)
+        process_pdf(Path(file_path).expanduser(), cfg, exp_dir)
 
     total_time = time.time() - start_time  
-    elapsed_time = datetime.timedelta(seconds=int(total_time))  
+    elapsed_time = timedelta(seconds=int(total_time))  
     print(f"\n\n✅  Total experiment time: {elapsed_time}") 
 
 
